@@ -1,9 +1,7 @@
-import { expect } from "chai"
 import { BigNumber, Contract, Signer } from "ethers"
 import { ethers } from "hardhat"
 import hre from "hardhat"
 import { pinJSONToIPFS } from "../scripts/nft/pinata";
-import { Address } from "cluster";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 // *** custom types ***
@@ -57,8 +55,8 @@ async function deploySmartContracts() {
     await verificationRegistry.deployed();
     console.log("Deployed VerificationRegistry contract at address: \t", verificationRegistry.address);
 
-    deployer = await ethers.getContractFactory("DiplomaERC721");
-    diplomaERC721 = await deployer.deploy();
+    deployer = await ethers.getContractFactory("MonokeeERC721");
+    diplomaERC721 = await deployer.deploy("Diploma", "DPLM");
     await diplomaERC721.deployed();
     console.log("Deployed DiplomaERC721 contract at address: \t\t", diplomaERC721.address);
 

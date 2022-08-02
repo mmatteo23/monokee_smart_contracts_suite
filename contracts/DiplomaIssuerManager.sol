@@ -3,7 +3,7 @@
 // Author: Matteo Midena
 // Business: Monokee
 
-import "./DiplomaERC721.sol";
+import "./MonokeeERC721.sol";
 import "./TrustedSmartContractRegistry.sol";
 import "./CredentialSchemaRegistry.sol";
 import "./IVerificationRegistry.sol";
@@ -26,7 +26,7 @@ contract DiplomaIssuerManager is Pausable, Ownable {
     // Trusted Smart Contract Registry
     TrustedSmartContractRegistry private _trustedSmartContractRegistry;
     // DiplomaNFT manager
-    DiplomaERC721 private _diplomaERC721;
+    MonokeeERC721 private _diplomaERC721;
     // Schema registry
     CredentialSchemaRegistry private _credentialSchemaRegistry;
     // Verification registry
@@ -53,7 +53,7 @@ contract DiplomaIssuerManager is Pausable, Ownable {
      *             FUNCTIONS
      *************************************/
 
-    constructor (IVerificationRegistry verificationRegistry, DiplomaERC721 diplomaERC721) {
+    constructor (IVerificationRegistry verificationRegistry, MonokeeERC721 diplomaERC721) {
         _verificationRegistry = verificationRegistry;
         _diplomaERC721 = diplomaERC721;
     }
@@ -72,9 +72,11 @@ contract DiplomaIssuerManager is Pausable, Ownable {
         emit ReleasedNewDiplomaNFT(msg.sender, tokenId, block.timestamp);
     }
 
+    /*
     function revokeDiplomaAccessToken(uint256 tokenId) public onlyOwner {
 
     }
+    */
 
     function consumeDiplomaAccessToken(uint256 _tokenId) public onlyOwner {
         /*

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "hardhat-deploy": "npx hardhat run scripts/deploy.ts --network localhost"
+    "hardhat-deploy": "npx hardhat run scripts/deploy.ts --network localhost",
+    "diploma-flow": "cls && npx hardhat run scripts/use_case_flow.ts --network localhost"
   },
   "keywords": [],
   "author": "",
