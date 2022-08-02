@@ -26,11 +26,11 @@ contract DiplomaIssuerManager is Pausable, Ownable {
     // Trusted Smart Contract Registry
     TrustedSmartContractRegistry private _trustedSmartContractRegistry;
     // DiplomaNFT manager
-    DiplomaERC721 private _diplomaERC721 = DiplomaERC721(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
+    DiplomaERC721 private _diplomaERC721;
     // Schema registry
     CredentialSchemaRegistry private _credentialSchemaRegistry;
     // Verification registry
-    IVerificationRegistry private _verificationRegistry = IVerificationRegistry(0x5FbDB2315678afecb367f032d93F642f64180aa3);
+    IVerificationRegistry private _verificationRegistry;
     // ...
 
     /**************************************
@@ -53,6 +53,11 @@ contract DiplomaIssuerManager is Pausable, Ownable {
      *             FUNCTIONS
      *************************************/
 
+    constructor (IVerificationRegistry verificationRegistry, DiplomaERC721 diplomaERC721) {
+        _verificationRegistry = verificationRegistry;
+        _diplomaERC721 = diplomaERC721;
+    }
+
     function _verification(address subject) internal view returns(bool) {
         return _verificationRegistry.isVerified(subject);
     }
@@ -60,7 +65,7 @@ contract DiplomaIssuerManager is Pausable, Ownable {
     // this contract can mint the NFT for the student but with this system
     // the NFT hasn't metadata, so we need to pass the tokenURI here
     function acceptNewDiplomaRequest(string memory tokenURI) public {
-        require(_verification(msg.sender));
+        require(_verification(msg.sender), "VerificationRegistry: This subject isn't verified");
 
         uint256 tokenId = _diplomaERC721.safeMint(msg.sender, tokenURI);
 
