@@ -7,32 +7,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./IVerificationRegistry.sol";
 import "./MonokeeERC721.sol";
+import "./IIssuerManager.sol";
 
 pragma solidity ^0.8.0;
 
 /**
  * @title Interface defining basic Issuer functionality.
  */
-abstract contract IssuerManager is Pausable, Ownable {
+abstract contract IssuerManager is Pausable, Ownable, IIssuerManager {
 
     IVerificationRegistry private _verificationRegistry;
     MonokeeERC721 private _tokenERC721;
-
-    /**********************/
-    /* EVENT DECLARATIONS */
-    /**********************/
-    event ReleasedNewToken (
-        address to,
-        uint256 tokenId,
-        uint256 date
-    );
-
-    event ConsumedToken (
-        address sender,
-        uint256 tokenId,
-        uint256 date
-    );
-
 
     /**
      * @dev The contract constructor creates the contract with VerificationRegistry and MonokeeERC721
@@ -53,7 +38,7 @@ abstract contract IssuerManager is Pausable, Ownable {
     /**
      * @dev The contract accepts new token request.
      */
-    function acceptNewRequest(string memory tokenURI) public {
+    function acceptNewRequest(string memory tokenURI) external {
         require(_verification(msg.sender), "VerificationRegistry: This subject isn't verified");
 
         uint256 tokenId = _tokenERC721.safeMint(msg.sender, tokenURI);
@@ -64,7 +49,7 @@ abstract contract IssuerManager is Pausable, Ownable {
     /**
      * @dev The contract owner consumes the user token.
      */
-    function consumeDiplomaAccessToken(uint256 _tokenId) public onlyOwner {
+    function consumeAccessToken(uint256 _tokenId) external override onlyOwner {
         
         _tokenERC721.burn(_tokenId);
 
