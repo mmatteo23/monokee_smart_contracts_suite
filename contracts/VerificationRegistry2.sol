@@ -9,12 +9,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";          // This library is used to help us decode signed and hashed data.
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";   // This library helps us with signature validation and hashing (it requires a name and a version)
 
-import "./IVerificationRegistry.sol";
+import "./IVerificationRegistry2.sol";
 
-//import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 
-contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"), IVerificationRegistry {
+contract VerificationRegistry2 is Ownable, EIP712("VerificationRegistry", "1.0"), IVerificationRegistry2 {
 
     // Verifier addresses mapped to metadata (VerifierInfo) about the Verifiers.
     mapping(address => VerifierInfo) private _verifiers;
@@ -26,13 +26,13 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
     uint256 private _verifierCount;
 
     // All verification records keyed by their uuids
-    mapping(bytes32 => VerificationRecord) private _verifications;
+    mapping(string => mapping(bytes32 => VerificationRecord)) private _verifications;
 
     // Verifications mapped to subject addresses (those who receive verifications)
-    mapping(address => bytes32[]) private _verificationsForSubject;
+    mapping(address => mapping(string => bytes32[])) private _verificationsForSubject;
 
     // Verifications issued by a given trusted verifier (those who execute verifications)
-    mapping(address => bytes32[]) private _verificationsForVerifier;
+    mapping(address => mapping(string => bytes32[])) private _verificationsForVerifier;
 
     // Total verifications registered (mapping keys not being enumerable, countable, etc)
     uint256 private _verificationRecordCount;
@@ -96,24 +96,24 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
     }
 
     // This method doesn't remove the record but change revoked flag. This is helpful when performing audits and tracking record history
-    function revokeVerification(bytes32 uuid) 
+    function revokeVerification(bytes32 uuid, string memory indexType) 
         external 
         override 
         onlyVerifier 
     {
-        require(_verifications[uuid].verifier == msg.sender, "VerificationRegistry: Caller is not the original verifier");
-        _verifications[uuid].revoked = true;
+        require(_verifications[indexType][uuid].verifier == msg.sender, "VerificationRegistry: Caller is not the original verifier");
+        _verifications[indexType][uuid].revoked = true;
         
         emit VerificationRevoked(uuid);
     }
 
-    function removeVerification(bytes32 uuid)
+    function removeVerification(bytes32 uuid, string memory indexType)
         external 
         override 
         onlyVerifier 
     {
-        require(_verifications[uuid].verifier == msg.sender, "VerificationRegistry: Caller is not the verifier of the referenced record");
-        delete _verifications[uuid];
+        require(_verifications[indexType][uuid].verifier == msg.sender, "VerificationRegistry: Caller is not the verifier of the referenced record");
+        delete _verifications[indexType][uuid];
         
         emit VerificationRemoved(uuid);
     }
@@ -126,11 +126,11 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
      *
      ***************************************************************/
 
-    function isVerified(address subject) external override view returns (bool) {
+    function isVerified(address subject, string memory indexType) external override view returns (bool) {
         require(subject != address(0), "VerificationRegistry: Invalid address");
-        bytes32[] memory subjectRecords = _verificationsForSubject[subject];
+        bytes32[] memory subjectRecords = _verificationsForSubject[subject][indexType];
         for (uint i=0; i<subjectRecords.length; i++) {
-            VerificationRecord memory record = _verifications[subjectRecords[i]];
+            VerificationRecord memory record = _verifications[indexType][subjectRecords[i]];
             if (!record.revoked && record.expirationTime > block.timestamp) {       // if it isn't revoked and not expired
                 return true;
             }
@@ -160,9 +160,9 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
     function _persistVerificationRecord(VerificationRecord memory verificationRecord) internal {
         // persist the record count and the record itself, and map the record to verifier and subject
         _verificationRecordCount++;
-        _verifications[verificationRecord.uuid] = verificationRecord;
-        _verificationsForSubject[verificationRecord.subject].push(verificationRecord.uuid);
-        _verificationsForVerifier[verificationRecord.verifier].push(verificationRecord.uuid);
+        _verifications[verificationRecord.indexType][verificationRecord.uuid] = verificationRecord;
+        _verificationsForSubject[verificationRecord.subject][verificationRecord.indexType].push(verificationRecord.uuid);
+        _verificationsForVerifier[verificationRecord.verifier][verificationRecord.indexType].push(verificationRecord.uuid);
     }
 
     function _registerVerificationBySubject(VerificationResult memory verificationResult, bytes memory signature) 
@@ -180,12 +180,12 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
         return verificationRecord;
     }
 
-    function _removeVerificationBySubject(bytes32 uuid) internal {
+    function _removeVerificationBySubject(bytes32 uuid, string memory indexType) internal {
         require(
-            _verifications[uuid].subject == msg.sender,
+            _verifications[indexType][uuid].subject == msg.sender,
             "VerificationRegistry: Caller is not the subject of the referenced record"
         );
-        delete _verifications[uuid];
+        delete _verifications[indexType][uuid];
 
         emit VerificationRemoved(uuid);
     }
@@ -196,10 +196,12 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
         returns(VerificationRecord memory) 
     {
         bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-            keccak256("VerificationResult(string schema,address subject,uint256 expiration)"),
-            keccak256(bytes(verificationResult.schema)),
+            keccak256("VerificationResult(address subject,uint256 expiration,string signature,string jsonResult,string useCase)"),
             verificationResult.subject,
-            verificationResult.expiration
+            verificationResult.expiration,
+            keccak256(bytes(verificationResult.signature)),
+            keccak256(bytes(verificationResult.jsonResult)),
+            keccak256(bytes(verificationResult.useCase))
         )));
 
         // recover the public address corresponding to the signature and regenerated hash
@@ -207,7 +209,7 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
 
         // retrieve a verifier address for the recovered address
         address verifierAddress = _signers[signerAddress];
-
+        
         // ensure the verifier is registered and its signer is the recovered address
         require(
             _verifiers[verifierAddress].signer == signerAddress,
@@ -227,7 +229,10 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
             subject: verificationResult.subject,
             entryTime: block.timestamp,
             expirationTime: verificationResult.expiration,
-            revoked: false
+            revoked: false,
+            signature: verificationResult.signature,
+            jsonResult: verificationResult.jsonResult,
+            indexType: verificationResult.useCase
         });
 
         // generate a UUID for the record
@@ -245,6 +250,8 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
                     verificationRecord.subject,
                     verificationRecord.entryTime,
                     verificationRecord.expirationTime,
+                    verificationRecord.signature,
+                    verificationRecord.indexType,
                     _verificationRecordCount
                 )
             );
@@ -268,48 +275,36 @@ contract VerificationRegistry is Ownable, EIP712("VerificationRegistry", "1.0"),
         require(_verifiers[verifierAddress].name != 0, "VerificationRegistry: Unknown Verifier Address");
         return _verifiers[verifierAddress];
     }
-    /*
-    function getVerifiers() external override view returns (VerifierInfo[] memory) {
-        VerifierInfo[] memory verifiers = new VerifierInfo[](_verifierCount);
-
-        for(uint i = 0; i < _verifierCount; i++){
-            verifiers[i] = _verifiers[i];
-        }
-
-        return verifiers;
-    }
-    */
+    
     function getVerificationCount() external override view returns(uint256) {
         return _verificationRecordCount;
     }
 
-    function getVerification(bytes32 uuid) external override view returns (VerificationRecord memory) {
-        return _verifications[uuid];
+    function getVerification(bytes32 uuid, string memory indexType) external override view returns (VerificationRecord memory) {
+        return _verifications[indexType][uuid];
     }
 
-    function getVerificationsForSubject(address subject) external override view returns (VerificationRecord[] memory) {
+    function getVerificationsForSubject(address subject, string memory indexType) external override view returns (VerificationRecord[] memory) {
         require(subject != address(0), "VerificationRegistry: Invalid address");
-        bytes32[] memory subjectRecords = _verificationsForSubject[subject];
+        bytes32[] memory subjectRecords = _verificationsForSubject[subject][indexType];
         VerificationRecord[] memory records = new VerificationRecord[](subjectRecords.length);
         for (uint i=0; i<subjectRecords.length; i++) {
-            VerificationRecord memory record = _verifications[subjectRecords[i]];
+            VerificationRecord memory record = _verifications[indexType][subjectRecords[i]];
             records[i] = record;
         }
         return records;
     }
 
-    function getVerificationsForVerifier(address verifier) external override view returns (VerificationRecord[] memory) {
+    function getVerificationsForVerifier(address verifier, string memory indexType) external override view returns (VerificationRecord[] memory) {
         require(verifier != address(0), "VerificationRegistry: Invalid address");
-        bytes32[] memory verifierRecords = _verificationsForVerifier[verifier];
+        bytes32[] memory verifierRecords = _verificationsForVerifier[verifier][indexType];
         VerificationRecord[] memory records = new VerificationRecord[](verifierRecords.length);
         for (uint i=0; i<verifierRecords.length; i++) {
-            VerificationRecord memory record = _verifications[verifierRecords[i]];
+            VerificationRecord memory record = _verifications[indexType][verifierRecords[i]];
             records[i] = record;
         }
         return records;
     }
-
-
 }
 
 

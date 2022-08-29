@@ -31,15 +31,18 @@ struct VerifierInfo {
     string did;
     string url;
     address signer;
+    string proof;
 }
 
 /**
 * @dev A verifier will submit a verification result in this format.
 */
 struct VerificationResult {
-    string schema; // indicator of the type of verification result
     address subject; // address of the subject of the verification
     uint256 expiration; // expiration of verification (may or may not be expiration of the VC)
+    string signature; // signature of the verification record
+    string jsonResult; // json result of the verification
+    string useCase; // use case of the verification
 }
 
 /**
@@ -53,12 +56,15 @@ struct VerificationRecord {
     uint256 entryTime; // time at which the verification was proven and recorded (not the time of verification)
     uint256 expirationTime; // expiration of verification (may or may not be expiration of the VC)
     bool revoked; // revoked or valid and active
+    string signature; // proof of verification
+    string jsonResult; // json result of the verification
+    string indexType;  // index type of the verification
 }
 
 /**
  * @title Interface defining basic VerificationRegistry functionality.
  */
-interface IVerificationRegistry {
+interface IVerificationRegistry2 {
 
     /**********************/
     /* EVENT DECLARATIONS */
@@ -123,34 +129,34 @@ interface IVerificationRegistry {
     /**
      * @dev Determine whether the subject address has a verification record that is not expired
      */
-    function isVerified(address subject) external view returns (bool);
+    function isVerified(address subject, string memory indexType) external view returns (bool);
 
     /**
      * @dev Retrieve a specific Verification Record by its uuid
      */
-    function getVerification(bytes32 uuid) external view returns (VerificationRecord memory);
+    function getVerification(bytes32 uuid, string memory indexType) external view returns (VerificationRecord memory);
 
     /**
      * @dev Retrieve all of the verification records associated with this subject address
      */
-    function getVerificationsForSubject(address subject) external view returns (VerificationRecord[] memory);
+    function getVerificationsForSubject(address subject, string memory indexType) external view returns (VerificationRecord[] memory);
 
     /**
      * @dev Retrieve all of the verification records associated with this verifier address
      */
-    function getVerificationsForVerifier(address verifier) external view returns (VerificationRecord[] memory);
+    function getVerificationsForVerifier(address verifier, string memory indexType) external view returns (VerificationRecord[] memory);
 
     /**
      * @dev Verifiers can revoke Verification Records they previously created
      */
-    function revokeVerification(bytes32 uuid) external;
+    function revokeVerification(bytes32 uuid, string memory indexType) external;
 
     /**
      * @dev Verifiers can remove verifications they previously created. Nothing is
      * truly 'deleted' from on-chain storage, as the record exists in previous
      * state, but this does prevent the record from usage in the future.
      */
-    function removeVerification(bytes32 uuid) external;
+    function removeVerification(bytes32 uuid, string memory indexType) external;
 
     /**
      * @dev A verifier registers a VerificationResult after it has executed a

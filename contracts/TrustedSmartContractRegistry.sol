@@ -57,6 +57,10 @@ contract TrustedSmartContractRegistry is Ownable {
         emit EditedSmartContractTrust(_addr, _trusted, block.timestamp);
     }
 
+    /**************************************
+     *               VIEWS
+     *************************************/
+
     function isTrusted(address _addr) public view returns(bool) {
         require(
             _registry[_addr].addr != address(0),
@@ -64,10 +68,6 @@ contract TrustedSmartContractRegistry is Ownable {
         );
         return _registry[_addr].trusted;
     }
-
-    /**************************************
-     *               VIEWS
-     *************************************/
 
     function getContractCount() external view returns(uint256) {
         return _contractCounter.current();
