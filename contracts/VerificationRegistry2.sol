@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";   // This 
 
 import "./IVerificationRegistry2.sol";
 
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 
 contract VerificationRegistry2 is Ownable, EIP712("VerificationRegistry", "1.0"), IVerificationRegistry2 {

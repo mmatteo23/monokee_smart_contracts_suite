@@ -8,7 +8,8 @@ export const createTrustedVerifiers = async (verifiers: string[], verificationRe
             name: hre.ethers.utils.formatBytes32String("Monokee"),
             did: "did:web:123456",
             url: "https://monokee.it",
-            signer: address
+            signer: address,
+            proof: "0x0x0x0xx0x0x0x0x0x0x0x0x0"
         }
 
         const setRegistryVerifierTx = await verificationRegistry.addVerifier(

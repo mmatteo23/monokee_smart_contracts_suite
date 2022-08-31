@@ -6,7 +6,7 @@
 import "./MonokeeERC721.sol";
 import "./TrustedSmartContractRegistry.sol";
 import "./CredentialSchemaRegistry.sol";
-import "./IVerificationRegistry.sol";
+import "./IVerificationRegistry2.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -23,14 +23,15 @@ contract DiplomaIssuerManager is Pausable, Ownable {
     
     //  !! this import isn't correct, because this approach isn't upgradeable !!
 
-    // Trusted Smart Contract Registry
-    TrustedSmartContractRegistry private _trustedSmartContractRegistry;
     // DiplomaNFT manager
     MonokeeERC721 private _diplomaERC721;
-    // Schema registry
-    CredentialSchemaRegistry private _credentialSchemaRegistry;
     // Verification registry
-    IVerificationRegistry private _verificationRegistry;
+    IVerificationRegistry2 private _verificationRegistry;
+    
+    // Schema registry
+    //CredentialSchemaRegistry private _credentialSchemaRegistry;
+    // Trusted Smart Contract Registry
+    //TrustedSmartContractRegistry private _trustedSmartContractRegistry;
     // ...
 
     /**************************************
@@ -53,13 +54,13 @@ contract DiplomaIssuerManager is Pausable, Ownable {
      *             FUNCTIONS
      *************************************/
 
-    constructor (IVerificationRegistry verificationRegistry, MonokeeERC721 diplomaERC721) {
+    constructor (IVerificationRegistry2 verificationRegistry, MonokeeERC721 diplomaERC721) {
         _verificationRegistry = verificationRegistry;
         _diplomaERC721 = diplomaERC721;
     }
 
     function _verification(address subject) internal view returns(bool) {
-        return _verificationRegistry.isVerified(subject);
+        return _verificationRegistry.isVerified(subject, "diploma");
     }
 
     // this contract can mint the NFT for the student but with this system

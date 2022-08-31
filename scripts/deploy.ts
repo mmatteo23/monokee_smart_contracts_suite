@@ -10,6 +10,7 @@ import { Contract, ContractFactory, ethers } from "ethers"
 import * as hre from "hardhat"
 
 const minter_role = ethers.utils.id("MINTER_ROLE");
+console.log(minter_role);
 
 async function main() {
   if (hre.network.name === "hardhat") {
@@ -33,26 +34,26 @@ async function main() {
     await deployer.getAddress()
   )
 
-  console.log("Account balance:", (await deployer.getBalance()).toString())
+  console.log("Account balance:", (await deployer.getBalance()).toString(), "\n")
 
   // deploy VerificationRegistry
-  /*
+  
   const registryFactory: ContractFactory = await hre.ethers.getContractFactory(
-    "VerificationRegistry"
+    "VerificationRegistry2"
   )
   const registryContract: Contract = await registryFactory.deploy()
   await registryContract.deployed()
-  console.log("Registry address:\t\t\t", registryContract.address)
-  */
-  const registryContractAddress = "0xE9a5A31088DFe5d64C1783aCD154D1484A99ff56";
+  console.log("Deployed VerificationRegistry2 at address:\t\t", registryContract.address)
+  
+  // const registryContractAddress = "0xE9a5A31088DFe5d64C1783aCD154D1484A99ff56";
 
   let ContractInstance = await hre.ethers.getContractFactory("MonokeeERC721");
   const diplomaERC721 = await ContractInstance.deploy("Diploma", "DPLM");
   await diplomaERC721.deployed();
-  console.log("Deployed DiplomaERC721 contract at address: \t\t", diplomaERC721.address);
+  console.log("Deployed DiplomaERC721 contract at address:\t\t", diplomaERC721.address);
 
   ContractInstance = await hre.ethers.getContractFactory("DiplomaIssuerManager");
-  const diplomaIssuerManager = await ContractInstance.deploy(registryContractAddress, diplomaERC721.address);
+  const diplomaIssuerManager = await ContractInstance.deploy(registryContract.address, diplomaERC721.address);
   await diplomaIssuerManager.deployed();
   console.log("Deployed DiplomaIssuerManager contract at address: \t", diplomaIssuerManager.address);
 

@@ -49,8 +49,7 @@ describe("VerificationRegistry2", function () {
       name: ethers.utils.formatBytes32String("Monokee"),
       did: "did:key:123456",
       url: "https://monokee.com/about",
-      signer: signer.address,
-      proof: "0x0x0x0xx0x0x0x0x0x0x0x0x0"
+      signer: signer.address
     }
 
     const setVerifierTx = await verificationRegistry.addVerifier(
@@ -79,8 +78,7 @@ describe("VerificationRegistry2", function () {
       name: ethers.utils.formatBytes32String("Monokee"),
       did: "did:key:123456",
       url: "https://monokee.com/about",
-      signer: signer.address,
-      proof: "0x0x0x0xx0x0x0x0x0x0x0x0x0"
+      signer: signer.address
     }
     
     const retrievedVerifierInfo = await verificationRegistry.getVerifier(
@@ -98,7 +96,6 @@ describe("VerificationRegistry2", function () {
       did: "did:key:123456",
       url: "https://monokee.com/about",
       signer: signer.address,
-      proof: "0x0x0x0xx0x0x0x0x0x0x0x0x0"
     }
 
     testVerifierInfo.url = "https://centre.io"
@@ -131,8 +128,7 @@ describe("VerificationRegistry2", function () {
       name: ethers.utils.formatBytes32String("Monokee"),
       did: "did:key:123456",
       url: "https://monokee.com/about",
-      signer: await signer.getAddress(),
-      proof: "0x0x0x0xx0x0x0x0x0x0x0x0x0"
+      signer: await signer.getAddress()
     }
 
     const setVerifierTx = await verificationRegistry.addVerifier(

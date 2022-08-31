@@ -43,7 +43,7 @@ describe("DiplomaIssuerManager", function () {
     describe("Dependences Initialization", function () {
 
         it("Deploy VerificationRegistry smart contract to the testnet", async () => {
-            const deployer = await ethers.getContractFactory("VerificationRegistry");
+            const deployer = await ethers.getContractFactory("VerificationRegistry2");
             verificationRegistry = await deployer.deploy();
             await verificationRegistry.deployed();
         });

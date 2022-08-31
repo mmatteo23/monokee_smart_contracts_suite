@@ -31,7 +31,6 @@ struct VerifierInfo {
     string did;
     string url;
     address signer;
-    string proof;
 }
 
 /**

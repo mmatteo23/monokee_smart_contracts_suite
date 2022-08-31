@@ -13,9 +13,11 @@ export const verificationProcess = async (registry: Contract, addresses: string[
 
     const types = {
         VerificationResult: [
-            { name: "schema", type: "string" },
             { name: "subject", type: "address" },
-            { name: "expiration", type: "uint256" }
+            { name: "expiration", type: "uint256" },
+            { name: "signature", type: "string"},
+            { name: "jsonResult", type: "string" },
+            { name: "useCase", type: "string" }
         ]
     }
 
@@ -25,9 +27,11 @@ export const verificationProcess = async (registry: Contract, addresses: string[
 
     for (const address of addresses) {
         const verificationResult = {
-            schema: "monokee.io/credentials/kyc",
             subject: address,
-            expiration: expiration
+            expiration: expiration,
+            signature: "asasasasasasasasasasasasasasasas",
+            jsonResult: JSON.stringify({ "test": "result" }),
+            useCase: "diploma"
         }
 
         const signature = await owner._signTypedData(
