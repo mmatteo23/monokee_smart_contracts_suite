@@ -30,12 +30,17 @@ REACT_APP_PINATA_SECRET = "your_pinata_secret"
 
 <h1>Try it</h1>
 
-Try running some of the following tasks:
+<p>Tests and scripts were running on hardhat localhost blockchain. Use the following steps:</p>
+
+<h2>1) Run localhost blockchain</h2>
 
 ```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
 npx hardhat node
-npx hardhat run scripts/deploy.ts
+```
+
+<h2>2) Run tests to see what smart contracts do!</h2>
+<p>Commands</p>
+
+```shell
+npx hardhat test --network localhost
 ```
